@@ -1,0 +1,18 @@
+{
+  "name": "deep-cargo-pocket-client",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "proptypes": "^1.1.0",
+    "react": "^16.0.0-beta.5",
+    "react-dom": "^16.0.0-beta.5",
+    "react-scripts": "1.0.11",
+    "whatwg-fetch": "^2.0.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
