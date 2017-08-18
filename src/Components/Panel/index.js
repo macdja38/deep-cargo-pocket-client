@@ -2,10 +2,16 @@ import React, {Component} from 'react';
 import PropTypes from 'proptypes';
 import {api} from '../../consts';
 
+import './index.css';
+
+const inputDescription = "Input URL you wish to add to pocket, or a range of urls with the range denoted by {100-200} for example https://gravitytales.com/Novel/way-of-choices/ztj-chapter-{522-523}";
+
 class Panel extends Component {
   constructor(...args) {
     super(...args);
+    this.state = {prediction: "", result: false};
     this.onClick = this.onClick.bind(this);
+    this.inputChanged = this.inputChanged.bind(this);
   }
 
   makeRequest(endpoint, data) {
@@ -19,32 +25,81 @@ class Panel extends Component {
     }).then((response) => response.json());
   }
 
-  onClick() {
-    let input = this.textInput.value;
-    if (input.length < 1) {
-      alert("Not enough input");
-      return;
+  inputChanged() {
+    const input = this.textInput.innerText;
+    const urls = this.calculateURLs(input);
+    if (urls.length > 1) {
+      const first = urls[0];
+      const last = urls[urls.length - 1];
+      this.setState({prediction: `${first} - ${last}`});
+    } else {
+      this.setState({prediction: urls[0]})
     }
-    let match = input.match(/{(\d+)-(\d+)}/);
+  }
+
+  /**
+   * Calculates array of urls from input string
+   * @param {string} string
+   * @returns {Array.<string>}
+   */
+  calculateURLs(string) {
+    let match = string.match(/{(\d+)-(\d+)}/);
     let urls;
     if (!match) {
-      urls = [input]
+      urls = [string]
     } else {
       let smallNum = parseInt(match[1], 10);
       let bigNum = parseInt(match[2], 10);
       urls = [];
       for (let i = smallNum; i <= bigNum; i++) {
-        urls.push(input.replace(/{\d+-\d+}/, i))
+        urls.push(string.replace(/{\d+-\d+}/, i))
       }
-      // urls = ['http://shiroyukitranslations.com/ztj-chapter-130/', 'http://shiroyukitranslations.com/ztj-chapter-131/']
     }
-    console.log(urls);
-    this.makeRequest('pocket/add', {urls})
+    return urls;
+  }
+
+  onClick() {
+    let input = this.textInput.innerText;
+    if (input.length < 1) {
+      alert("Not enough input");
+      return;
+    }
+    this.makeRequest('pocket/add', {urls: this.calculateURLs(input)}).then(result => {
+      this.setState({result: result["action_results"]})
+    })
   }
 
   render() {
-    return <div><input type="text" style={{maxWidth: "90%", maxHeight: "100%"}} ref={text => this.textInput = text}/>
-      <button onClick={this.onClick}>Submit</button>
+    return <div className="panel-box">
+      <div className="panel-box-input">
+        input:
+        <div contentEditable={true} className="panel-input-element panel-url-input" onKeyUp={this.inputChanged}
+             ref={text => this.textInput = text}/>
+        <br/>
+        {inputDescription}
+      </div>
+      <div className="panel-box-confirm">
+        prediction: <span>{this.state.prediction}</span>
+        <br/>
+        <button onClick={this.onClick}>Submit</button>
+      </div>
+      <div className="panel-box-result">
+        {Array.isArray(this.state.result) ? <div>
+          Result:
+          <table>
+            <thead><tr><th>Title</th><th>Excerpt</th><th>URL</th></tr></thead>
+            <tbody>
+            {
+              this.state.result.map(r => <tr key={r.item_id}>
+                <td>{r.title}</td>
+                <td>{r.excerpt}</td>
+                <td>{r.resolved_url}</td>
+              </tr>)
+            }
+            </tbody>
+          </table>
+        </div> : this.state.result}
+      </div>
     </div>
   }
 }
