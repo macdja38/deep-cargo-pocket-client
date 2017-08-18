@@ -59,12 +59,21 @@ class Panel extends Component {
   }
 
   onClick() {
-    let input = this.textInput.innerText;
-    if (input.length < 1) {
+    const title = this.titleInput.value;
+    const tags = this.tagInput.value;
+    const urls = this.textInput.innerText;
+    if (urls.length < 1) {
       alert("Not enough input");
       return;
     }
-    this.makeRequest('pocket/add', {urls: this.calculateURLs(input)}).then(result => {
+    const data = {urls};
+    if (title) {
+      data.title = title;
+    }
+    if (tags) {
+      data.tags = tags;
+    }
+    this.makeRequest('pocket/add', data).then(result => {
       this.setState({result: result["action_results"]})
     })
   }
@@ -72,7 +81,11 @@ class Panel extends Component {
   render() {
     return <div className="panel-box">
       <div className="panel-box-input">
-        input:
+        title: <input type="text" ref={text => this.titleInput = text}/>
+        <br/>
+        tags: <input type="text" ref={text => this.tagInput = text}/>
+        <br/>
+        url:
         <div contentEditable={true} className="panel-input-element panel-url-input" onKeyUp={this.inputChanged}
              ref={text => this.textInput = text}/>
         <br/>
