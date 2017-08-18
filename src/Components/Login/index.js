@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'proptypes'
+import {api} from '../../consts'
 
 class Login extends Component {
   render() {
@@ -9,7 +10,7 @@ class Login extends Component {
       </div>)
     }
     return (
-      <button onClick={() => window.location.href = "http://127.0.0.1:3001/login"}>
+      <button onClick={() => window.location.href = `${api}/login`}>
         Login
       </button>
     );
