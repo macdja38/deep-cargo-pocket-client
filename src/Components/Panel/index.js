@@ -62,6 +62,7 @@ class Panel extends Component {
     const title = this.titleInput.value;
     const tags = this.tagInput.value;
     const urls = this.textInput.innerText;
+    const tagCheck = this.tagCheck.checked;
     if (urls.length < 1) {
       alert("Not enough input");
       return;
@@ -73,6 +74,9 @@ class Panel extends Component {
     if (tags) {
       data.tags = tags;
     }
+    if (tagCheck) {
+      data.tagCheck = true;
+    }
     this.makeRequest('pocket/add', data).then(result => {
       this.setState({result: result["action_results"]})
     })
@@ -82,6 +86,8 @@ class Panel extends Component {
     return <div className="panel-box">
       <div className="panel-box-input">
         title: <input type="text" ref={text => this.titleInput = text}/>
+        <br/>
+        use tag for chapter: <input type="checkbox" ref={check => this.tagCheck = check}/>
         <br/>
         tags: <input type="text" ref={text => this.tagInput = text}/>
         <br/>
@@ -100,7 +106,13 @@ class Panel extends Component {
         {Array.isArray(this.state.result) ? <div>
           Result:
           <table>
-            <thead><tr><th>Title</th><th>Excerpt</th><th>URL</th></tr></thead>
+            <thead>
+            <tr>
+              <th>Title</th>
+              <th>Excerpt</th>
+              <th>URL</th>
+            </tr>
+            </thead>
             <tbody>
             {
               this.state.result.map(r => <tr key={r.item_id}>
