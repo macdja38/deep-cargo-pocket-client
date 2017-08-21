@@ -63,6 +63,7 @@ class Panel extends Component {
     const tags = this.tagInput.value;
     const urls = this.textInput.innerText;
     const tagCheck = this.tagCheck.checked;
+    const slowCheck = this.slowCheck.checked || false;
     if (urls.length < 1) {
       alert("Not enough input");
       return;
@@ -77,6 +78,9 @@ class Panel extends Component {
     if (tagCheck) {
       data.tagCheck = true;
     }
+    if (slowCheck) {
+      data.slowCheck = true;
+    }
     this.makeRequest('pocket/add', data).then(result => {
       this.setState({result: result["action_results"]})
     })
@@ -88,6 +92,9 @@ class Panel extends Component {
         title: <input type="text" ref={text => this.titleInput = text}/>
         <br/>
         use tag for chapter: <input type="checkbox" ref={check => this.tagCheck = check}/>
+        <br/>
+        Slow add (ads one at a time, allows sort by date): <input type="checkbox"
+                                                                  ref={check => this.slowCheck = check}/>
         <br/>
         tags: <input type="text" ref={text => this.tagInput = text}/>
         <br/>
