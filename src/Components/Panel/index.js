@@ -71,8 +71,7 @@ function Form({ setResult }) {
 
   const onSubmit = React.useCallback(
     values => {
-      const { title, extraTags, url, chapterTag } = values;
-      const urls = calculateURLs(url);
+      const { title, extraTags, url: urls, chapterTag } = values;
 
       const data = {
         urls,
