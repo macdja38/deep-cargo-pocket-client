@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@chakra-ui/core": "^0.6.1",
+    "@emotion/core": "^10.0.28",
+    "@emotion/styled": "^10.0.27",
+    "emotion-theming": "^10.0.27",
     "proptypes": "^1.1.0",
-    "react": "^16.0.0-beta.5",
-    "react-dom": "^16.0.0-beta.5",
-    "react-scripts": "1.0.11",
+    "react": "^16.13.0",
+    "react-dom": "16.13.0",
+    "react-hook-form": "^5.1.1",
+    "react-scripts": "3.4.0",
     "whatwg-fetch": "^2.0.3"
   },
   "scripts": {
@@ -14,5 +19,20 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "serve": "^11.3.0"
   }
 }

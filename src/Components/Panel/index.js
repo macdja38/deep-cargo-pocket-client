@@ -1,145 +1,239 @@
-import React, {Component} from 'react';
-import PropTypes from 'proptypes';
-import {api} from '../../consts';
+import React from "react";
+import PropTypes from "prop-types";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Code,
+  Divider,
+  Flex,
+  FormControl,
+  FormErrorMessage,
+  FormHelperText,
+  FormLabel,
+  Heading,
+  Input,
+  Link,
+  List,
+  ListItem,
+  Text,
+  Stack
+} from "@chakra-ui/core";
+import { useForm } from "react-hook-form";
 
-import './index.css';
+import { api } from "../../consts";
 
-const inputDescription = "Input URL you wish to add to pocket, or a range of urls with the range denoted by {100-200} for example https://gravitytales.com/Novel/way-of-choices/ztj-chapter-{522-523}";
-
-class Panel extends Component {
-  constructor(...args) {
-    super(...args);
-    this.state = {prediction: "", result: false};
-    this.onClick = this.onClick.bind(this);
-    this.inputChanged = this.inputChanged.bind(this);
-  }
-
-  makeRequest(endpoint, data) {
-    return fetch(`${api}/${endpoint}`, {
-      method: "POST",
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    }).then((response) => response.json());
-  }
-
-  inputChanged() {
-    const input = this.textInput.innerText;
-    const urls = this.calculateURLs(input);
-    if (urls.length > 1) {
-      const first = urls[0];
-      const last = urls[urls.length - 1];
-      this.setState({prediction: `${first} - ${last}`});
-    } else {
-      this.setState({prediction: urls[0]})
+/**
+ * Calculates array of urls from input string
+ *
+ * @param {string} string
+ * @returns {string[]}
+ */
+function calculateURLs(string) {
+  const match = string.match(/{(\d+)-(\d+)}/);
+  let urls;
+  if (!match) {
+    urls = [string];
+  } else {
+    const smallNum = Number.parseInt(match[1], 10);
+    const bigNum = Number.parseInt(match[2], 10);
+    urls = [];
+    for (let i = smallNum; i <= bigNum; i++) {
+      urls.push(string.replace(/{\d+-\d+}/, i));
     }
   }
-
-  /**
-   * Calculates array of urls from input string
-   * @param {string} string
-   * @returns {Array.<string>}
-   */
-  calculateURLs(string) {
-    let match = string.match(/{(\d+)-(\d+)}/);
-    let urls;
-    if (!match) {
-      urls = [string]
-    } else {
-      let smallNum = parseInt(match[1], 10);
-      let bigNum = parseInt(match[2], 10);
-      urls = [];
-      for (let i = smallNum; i <= bigNum; i++) {
-        urls.push(string.replace(/{\d+-\d+}/, i))
-      }
-    }
-    return urls;
-  }
-
-  onClick() {
-    const title = this.titleInput.value;
-    const tags = this.tagInput.value;
-    const urls = this.textInput.innerText;
-    const tagCheck = this.tagCheck.checked;
-    const slowCheck = this.slowCheck.checked || false;
-    if (urls.length < 1) {
-      alert("Not enough input");
-      return;
-    }
-    const data = {urls};
-    if (title) {
-      data.title = title;
-    }
-    if (tags) {
-      data.tags = tags;
-    }
-    if (tagCheck) {
-      data.tagCheck = true;
-    }
-    if (slowCheck) {
-      data.slowCheck = true;
-    }
-    this.makeRequest('pocket/add', data).then(result => {
-      this.setState({result: result["action_results"]})
-    })
-  }
-
-  render() {
-    return <div className="panel-box">
-      <div className="panel-box-input">
-        title: <input type="text" ref={text => this.titleInput = text}/>
-        <br/>
-        use tag for chapter: <input type="checkbox" ref={check => this.tagCheck = check}/>
-        <br/>
-        Slow add (ads one at a time, allows sort by date): <input type="checkbox"
-                                                                  ref={check => this.slowCheck = check}/>
-        <br/>
-        tags: <input type="text" ref={text => this.tagInput = text}/>
-        <br/>
-        url:
-        <div contentEditable={true} className="panel-input-element panel-url-input" onKeyUp={this.inputChanged}
-             ref={text => this.textInput = text}/>
-        <br/>
-        {inputDescription}
-      </div>
-      <div className="panel-box-confirm">
-        prediction: <span>{this.state.prediction}</span>
-        <br/>
-        <button onClick={this.onClick}>Submit</button>
-      </div>
-      <div className="panel-box-result">
-        {Array.isArray(this.state.result) ? <div>
-          Result:
-          <table>
-            <thead>
-            <tr>
-              <th>Title</th>
-              <th>Excerpt</th>
-              <th>URL</th>
-            </tr>
-            </thead>
-            <tbody>
-            {
-              this.state.result.map(r => <tr key={r.item_id}>
-                <td>{r.title}</td>
-                <td>{r.excerpt}</td>
-                <td>{r.resolved_url}</td>
-              </tr>)
-            }
-            </tbody>
-          </table>
-        </div> : this.state.result}
-      </div>
-    </div>
-  }
+  return urls;
 }
 
-Panel.props = {
-  user: PropTypes.shape({
-    username: PropTypes.string.isRequired,
-  }).isRequired,
+function makeRequest(endpoint, data) {
+  return fetch(`${api}/${endpoint}`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  }).then(response => response.json());
+}
+
+function Form({ setResult }) {
+  const { handleSubmit, errors, register, formState } = useForm();
+  const [prediction, setPrediction] = React.useState("");
+
+  const onURLChange = React.useCallback(
+    e => {
+      const [first, last] = calculateURLs(e.target.value);
+
+      setPrediction(last ? `${first} - ${last}` : first);
+    },
+    [setPrediction]
+  );
+
+  const onSubmit = React.useCallback(
+    values => {
+      const { title, extraTags, url: urls, chapterTag } = values;
+
+      const data = {
+        urls,
+        slowCheck: true
+      };
+
+      if (title) data.title = title;
+      if (extraTags) data.tags = extraTags;
+      if (chapterTag) data.tagCheck = true;
+
+      return makeRequest("pocket/add", data).then(result => {
+        setResult(result["action_results"]);
+      });
+    },
+    [setResult]
+  );
+
+  return (
+    <Stack
+      as="form"
+      p={[4, 4, 4, 16]}
+      spacing={4}
+      rounded
+      border="grey"
+      onSubmit={handleSubmit(onSubmit)}
+    >
+      <Heading>Add Chapters to Pocket</Heading>
+      <FormControl isInvalid={errors.title}>
+        <FormLabel htmlFor="title">Title</FormLabel>
+        <Input
+          name="title"
+          placeholder="Way of Choices"
+          ref={register({
+            required: "Please enter a title"
+          })}
+        />
+        <FormErrorMessage>
+          {errors.title && errors.title.message}
+        </FormErrorMessage>
+      </FormControl>
+
+      <FormControl>
+        <Checkbox defaultIsChecked name="chapterTag" ref={register()}>
+          Use tag for chapter number
+        </Checkbox>
+      </FormControl>
+
+      <FormControl>
+        <FormLabel htmlFor="extraTags">Extra tags</FormLabel>
+        <Input name="extraTags" placeholder="way-of-choices" ref={register()} />
+      </FormControl>
+
+      <FormControl isInvalid={errors.url}>
+        <FormLabel htmlFor="url">Chapter URL</FormLabel>
+        <Input
+          name="url"
+          placeholder="https://gravitytales.com/Novel/way-of-choices/ztj-chapter-{522-523}"
+          aria-describedby="url-helper"
+          onChange={onURLChange}
+          ref={register({
+            validate: maybeUrl => {
+              try {
+                new URL(maybeUrl);
+                return true;
+              } catch (e) {
+                return "Please enter a valid URL";
+              }
+            }
+          })}
+        />
+        <FormErrorMessage>{errors.url && errors.url.message}</FormErrorMessage>
+        <FormHelperText id="url-helper">
+          Input URL you wish to add to pocket, or a range of urls with the range
+          denoted by <Code>{"{100-200}"}</Code>, for example:
+          <Code>
+            https://gravitytales.com/Novel/way-of-choices/ztj-chapter-
+            {"{522-523}"}
+          </Code>
+        </FormHelperText>
+      </FormControl>
+
+      <Box>
+        <Heading as="h2" size="lg">
+          Prediction
+        </Heading>
+        <Text>{prediction || "Enter a URL above first"}</Text>
+      </Box>
+
+      <Box>
+        <Button
+          type="submit"
+          mt={4}
+          size="lg"
+          variantColor="teal"
+          isLoading={formState.isSubmitting}
+          isFullWidth
+        >
+          Submit
+        </Button>
+      </Box>
+    </Stack>
+  );
+}
+
+Form.propTypes = {
+  setResult: PropTypes.func.isRequired
 };
 
-export default Panel;
+function Result({ result }) {
+  return (
+    <Box py={4} px={[4, 4, 4, 16]}>
+      <Heading>Result</Heading>
+      {Array.isArray(result) && (
+        <List>
+          {result.map(r => (
+            <ListItem
+              key={r.item_id}
+              p={4}
+              my={2}
+              borderWidth={1}
+              borderColor="gray.100"
+              rounded="md"
+              _hover={{ borderColor: "gray.200" }}
+            >
+              <Flex justifyContent="space-between">
+                <Box flexGrow="1" mr={4}>
+                  <Text fontWeight="bold" fontSize="lg">
+                    {r.title}
+                  </Text>
+                  <Divider />
+                  <Text color="gray.700">{r.excerpt}</Text>
+                </Box>
+                <Flex
+                  direction="column"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Link href={r.resolved_url} title="Resolved URL">
+                    {r.resolved_url}
+                  </Link>
+                </Flex>
+              </Flex>
+            </ListItem>
+          ))}
+        </List>
+      )}
+    </Box>
+  );
+}
+
+export default function Panel() {
+  const [result, setResult] = React.useState(false);
+
+  return (
+    <Box>
+      <Form setResult={setResult} />
+      {result && (
+        <>
+          <Divider />
+          <Result result={result} />
+        </>
+      )}
+    </Box>
+  );
+}

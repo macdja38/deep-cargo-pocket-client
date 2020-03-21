@@ -1,31 +1,37 @@
-import React, { Component } from 'react';
-import './App.css';
-import 'whatwg-fetch';
-import Login from './Components/Login'
-import Panel from './Components/Panel';
-import {api} from './consts';
+import React, { Component } from "react";
+import "whatwg-fetch";
+import { CSSReset, ThemeProvider, Box } from "@chakra-ui/core";
+
+import Login from "./Components/Login";
+import Panel from "./Components/Panel";
+import { api } from "./consts";
 
 class App extends Component {
   constructor(...args) {
     super(...args);
-    this.state = {user: null};
+    this.state = { user: null };
   }
 
   componentDidMount() {
     fetch(`${api}/user`, {
-      credentials: 'include'
-    }).then((response) => response.json()).then((user) => {
-      console.log("got user", user);
-      this.setState({user})
+      credentials: "include"
     })
+      .then(response => response.json())
+      .then(user => {
+        this.setState({ user });
+      })
+      .catch(() => {});
   }
 
   render() {
     return (
-      <div className="App">
+      <ThemeProvider>
+        <CSSReset />
         <Login user={this.state.user} />
-        {this.state.user ? <Panel user={this.state.user} />: ""}
-      </div>
+        <Box maxWidth="60em" mx="auto">
+          {this.state.user ? <Panel user={this.state.user} /> : ""}
+        </Box>
+      </ThemeProvider>
     );
   }
 }
